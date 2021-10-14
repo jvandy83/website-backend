@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(
 	cors({
-		origin: 'https://vanthedev.com',
+		origin: 'http://localhost:9000',
 	}),
 );
 
@@ -22,11 +22,10 @@ app.post('/contact', (req, res) => {
 		// create reusable transporter object using the default SMTP transport
 		let transporter = nodemailer.createTransport({
 			service: 'gmail',
-			port: 465,
+			port: 587,
+			secure: false,
 			logger: true,
 			debug: true,
-			// host: 'smtp.gmail.com',
-			// port: 587,
 			secure: false, // true for 465, false for other ports
 			auth: {
 				user: 'vanthedev@gmail.com', // generated ethereal user
@@ -35,12 +34,13 @@ app.post('/contact', (req, res) => {
 		});
 
 		// send mail with defined transport object
+		console.log(req.body.email);
 		let info = await transporter.sendMail({
-			from: `${req.body.name}<${req.body.email}>`, // sender address
+			from: `${req.body.name}`, // sender address
 			to: 'vanthedev@gmail.com', // list of receivers
 			subject: req.body.subject, // Subject line
-			text: req.body.message, // plain text body
-			// html: '<b>Hello world?</b>', // html body
+			// text: `${req.body.message}`, // plain text body
+			html: `<span><b>Sender: </b>${req.body.email}</span><br><br><div><p>${req.body.message}</p></div>`, // html body
 		});
 
 		console.log('Message sent: %s', info.messageId);
@@ -51,12 +51,14 @@ app.post('/contact', (req, res) => {
 		// Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 	}
 
-	main().catch((err) => {
-		console.error;
-		res.status(400).json({
-			error: err,
+	main()
+		.then((res) => res)
+		.catch((err) => {
+			console.error;
+			return res.status(400).json({
+				error: err,
+			});
 		});
-	});
 
 	res.status(200).json({
 		ok: true,
